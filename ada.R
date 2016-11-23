@@ -13,8 +13,7 @@ ada<-function(dataset1){
 	library("plyr")
 	library(sqldf)
 	
-	
- 	d1<-as.data.frame(d1)
+	d1<-read.table(file=dataset1,sep = "",fill = TRUE,header = FALSE)
  	
  	#t: no. of iterations
  	
@@ -114,7 +113,7 @@ ada<-function(dataset1){
  	
  	ferror<-matrix(0,t,1)
  	
- 	bound<-matrix(0,t,1)
+ 	bound<-matrix(1,t,1)
  	
  	# for loop for 10 iterations
  	
@@ -134,6 +133,8 @@ ada<-function(dataset1){
  						
  						indexerr1<-c(indexerr1,k)
  						
+ 				
+ 						
  					}
  					
  					#threshold condition below for 1 on right and -1 on left
@@ -144,6 +145,8 @@ ada<-function(dataset1){
  						
  						indexerr2<-c(indexerr2,k)
  						
+ 						
+ 					
  					}	
  					
  				}
@@ -162,6 +165,9 @@ ada<-function(dataset1){
  						
  						indexerr1<-c(indexerr1,k)
  						
+ 						
+ 						
+ 						
  					}
  					
  					#threshold condition below for 1 on right and -1 on left
@@ -171,6 +177,8 @@ ada<-function(dataset1){
  						error2[i,j]<-error2[i,j] + p[i,k]
  						
  						indexerr2<-c(indexerr2,k)
+ 						
+ 				
  						
  					}
  					
@@ -190,6 +198,9 @@ ada<-function(dataset1){
  						
  						indexerr1<-c(indexerr1,k)
  						
+ 						
+ 					
+ 						
  					}
  					
  					else if((x[k] >= x[j]) && (y[k] == 1)){
@@ -197,6 +208,8 @@ ada<-function(dataset1){
  						error2[i,j]<-error2[i,j] + p[i,k]
  						
  						indexerr2<-c(indexerr2,k)	
+ 						
+ 						
  						
  					}
  					
@@ -206,15 +219,18 @@ ada<-function(dataset1){
  						
  						error1[i,j]<-error1[i,j] + p[i,k]
  						
- 						indexerr1<-c(indexerr,k)
+ 						indexerr1<-c(indexerr1,k)
  						
+ 												
  					}
  					
  					else if((x[k] >= x[j]) && (y[k] != 1)){
  						
  						error2[i,j]<-error2[i,j] + p[i,k]
  						
- 						indexerr2<-c(indexerr,k)	
+ 						indexerr2<-c(indexerr2,k)	
+ 						
+ 						
  						
  					}
  					
@@ -229,24 +245,50 @@ ada<-function(dataset1){
  		
  		#j ends here 
  		
+ 		errortemp<-matrix(0,1,2)
  		
- 		errorfinal[i,1]<-min(min(error1[i,]),min(error2[i,]))
+ 		errortemp[1,1]<-min(error1[i,])
  		
- 		symbol[i,1]<-which.min(min(error1[i,]),min(error2[i,]))
+ 		errortemp[1,2]<-min(error2[i,])
+ 		
+ 		
+ 		errorfinal[i,1]<-min(errortemp)
+ 		
+ 		symbol[i,1]<-which.min(errortemp)
+ 		
+ 		
+ 	
+
  		
  		if(symbol[i,1]==1){
  			
- 			h[i,1]<-x[which.min(error1[i,]),1]
- 			
- 		}
+ 			if(as.numeric(which.min(error1[i,])) == n+1){
+				
+				h[i,1]<-1000
+				
+			}
+ 			else{
+ 				
+ 				h[i,1]<-x[1,as.numeric(which.min(error1[i,]))] 				
+ 			}
+ 		}	
+ 		
+
  		else if(symbol[i,1]==2){
  			
- 			h[i,1]<-x[which.min(error2[i,]),1]
+ 			if(as.numeric (which.min(error1[i,])) == 1){
+				
+				h[i,1]<-0
+				
+			}
+ 			else{
+ 			
+ 				h[i,1]<-x[1, as.numeric (which.min(error2[i,]))]
+ 			}
  			
  		}
  		
- 		alpha[i,1]<-(1/2)*(log((1-errorfinal[i,1])/errorfinal[i,1])/log(2.718))
- 		
+ 		alpha[i,1]<-(1/2)*(log(((1-errorfinal[i,1])/errorfinal[i,1]), base = exp(1))) 		
  		
  		#calculating q
  		
@@ -271,6 +313,8 @@ ada<-function(dataset1){
  				
  				
  			}
+ 			
+ 			
  			
  			# x > 2.5 condition
  			
@@ -363,18 +407,29 @@ ada<-function(dataset1){
  		
  		for(k in 1:n){
  			
- 			if(sign(f[i,k]!=sign(y[k]))){
+ 			if(sign(f[i,k])!=sign(y[k])){
  				
  				ferror[i,1]<-ferror[i,1] + 1 
  				
  			}
- 			
+ 		 			
  		}
+ 		
+ 		
  		
  		ferror[i,1]<-ferror[i,1]/n
  		
- 		bound[i,1]<-bound[i,1]*z[i,1]
-
+ 		if(i==1){
+ 			
+ 			bound[i,1]<-1*z[i,1]
+ 			
+ 		}
+ 		
+ 		else{
+ 			
+ 			bound[i,1]<-bound[i-1,1]*z[i,1]
+		
+		}
 
  		
  	}
