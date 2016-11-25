@@ -407,7 +407,7 @@ ada<-function(dataset1){
  		
  		for(k in 1:n){
  			
- 			if(sign(f[i,k])!=sign(y[k])){
+ 			if(sign(f[i,k])!=as.numeric(sign(y[k]))){
  				
  				ferror[i,1]<-ferror[i,1] + 1 
  				
@@ -520,6 +520,15 @@ ada<-function(dataset1){
  	
  	g<-matrix(0,t,n)
  	
+ 	#z1
+ 	
+ 	z1<-matrix(0,t,1)
+ 	
+ 	#f1: boosted classifier
+ 	
+ 	f1<-matrix(0,t,n)
+
+ 	
  	#ferror: f error
  	
  	ferror1<-matrix(0,t,1)
@@ -592,12 +601,12 @@ ada<-function(dataset1){
  					
  					if((x[k] < 1000 ) && (y[k] == 1 )){
  						
- 						ppw2[i,j]<-ppw2[i,j] + p1[i,j]
+ 						ppw2[i,j]<-ppw2[i,j] + p1[i,k]
  						
  					}
  					else if((x[k] < 1000 ) && (y[k] == -1 )){
  						
- 						pmr2[i,j]<-ppw2[i,j] + p1[i,j]
+ 						pmr2[i,j]<-ppw2[i,j] + p1[i,k]
  					
  					}
  					
@@ -605,7 +614,7 @@ ada<-function(dataset1){
  				
  			}
  			
- 			else {
+ 			else if(j!=1 && j!=(n+1)){
  				
  				for(k in 1:n){
  					
@@ -632,6 +641,7 @@ ada<-function(dataset1){
  						
  					}
  					
+ 										
  					#threshold condition below for 1 on right and -1 on left
  					
  					if((x[k] < x[j] ) && (y[k] == 1 )){
@@ -662,17 +672,25 @@ ada<-function(dataset1){
  			G1[i,j]<-sqrt(ppr1[i,j]*pmw1[i,j]) + sqrt(ppw1[i,j]*pmr1[i,j])
  			G2[i,j]<-sqrt(ppr2[i,j]*pmw2[i,j]) + sqrt(ppw2[i,j]*pmr2[i,j])
  			
+ 			
+ 						
  		}
  		#j ends here 	
 		
 		Gfinal1[i,1]<-min(G1[i,])
 		Gfinal2[i,1]<-min(G2[i,])
 		
-		Gfinal[i,1]<-min(Gfinal1[i,1],Gfinal[i,1])
+		Gfinal[i,1]<-min(Gfinal1[i,1],Gfinal2[i,1])
 		
 		#symbol1
 		
-		symbol1[i,1]<-which.min(Gfinal1[i,1],Gfinal[i,1])
+		Gfinaltemp<-matrix(0,1,2)
+		
+		Gfinaltemp[1,1]<-Gfinal1[i,1]
+		
+		Gfinaltemp[1,2]<-Gfinal2[i,1]
+		
+		symbol1[i,1]<-which.min(Gfinaltemp)
 		
 		#calculating h
 		
@@ -685,7 +703,7 @@ ada<-function(dataset1){
 			}
  			else{
  				
- 				h1[i,1]<-x[which.min(G1[i,]),1]
+ 				h1[i,1]<-x[1,which.min(G1[i,])]
  			}
  		}
  		else if(symbol[i,1]==2){
@@ -697,7 +715,7 @@ ada<-function(dataset1){
  			}
  			else{
  				
- 				h1[i,1]<-x[which.min(G2[i,])-1,1]
+ 				h1[i,1]<-x[1,which.min(G2[i,])-1]
  			
  			}
  		}
@@ -708,15 +726,15 @@ ada<-function(dataset1){
 		
 		if(symbol1[i,1]==1){
 			
-			cp[i,1]<- 0.5*log((ppr1[i,k] + eps)/(pmw1[i,k] + eps))/log(2.718)
-			cm[i,1]<- 0.5*log((ppw1[i,k] + eps)/(pmr1[i,k] + eps))/log(2.718)
+			cp[i,1]<- 0.5*log((ppr1[i,k] + eps)/(pmw1[i,k] + eps), base = exp(1))
+			cm[i,1]<- 0.5*log((ppw1[i,k] + eps)/(pmr1[i,k] + eps),base = exp(1))
 
 		}
 		
-		else if	(symbol1[i,1]==1){
+		else if	(symbol1[i,1]==2){
 			
-			cp[i,1]<- 0.5*log((ppr2[i,k] + eps)/(pmw2[i,k] + eps))/log(2.718)
-			cm[i,1]<- 0.5*log((ppw2[i,k] + eps)/(pmr2[i,k] + eps))/log(2.718)
+			cp[i,1]<- 0.5*log((ppr2[i,k] + eps)/(pmw2[i,k] + eps),base=exp(1))
+			cm[i,1]<- 0.5*log((ppw2[i,k] + eps)/(pmr2[i,k] + eps),base=exp(1))
 			
 			
 		}
@@ -739,23 +757,23 @@ ada<-function(dataset1){
 				}
 				
 			}
+		}
 			
-		else if(symbol1[i,1]==2){
+		if(symbol1[i,1]==2){
 			
-				for(k in 1:n ){
+			for(k in 1:n ){
 				
 				if(x[k] >= h[i,1]){
-					
+				
 					g[i,k]<-cp[i,1]
 					
 				}
 				else{
 					
 					g[i,k]<-cm[i,1]
-					
+						
 				}
-			
-			
+					
 			}
 
 		}
@@ -766,7 +784,9 @@ ada<-function(dataset1){
  		
  		for(j in 1:n){
  			
- 			z1[i,1]<-z1[i,1] + p1[i,j]*(2.718^((-1)*y[i,1]*g[i,j]))
+ 			z1[i,1]<-z1[i,1] + p1[i,j]*(exp((-1)*y[1,j]*g[i,j]))
+ 			
+ 			print(z1)
  			
  		}
  		
@@ -774,7 +794,7 @@ ada<-function(dataset1){
  		
  		for(j in 1:n){
  			
- 			p1[i+1,j]<-(p1[i,j]*(2.718^((-1)*y[i,1]*g[i,j])))/z[i,1]
+ 			p1[i+1,j]<-(p1[i,j]*(2.718^((-1)*y[1,j]*g[i,j])))/z1[i,1]
  			
  		}
 
@@ -826,7 +846,7 @@ ada<-function(dataset1){
  		
  		for(k in 1:n){
  			
- 			if(sign(f1[i,k]!=sign(y[k]))){
+ 			if(sign(f1[i,k])!=as.numeric(sign(y[k]))){
  				
  				ferror1[i,1]<-ferror1[i,1] + 1 
  				
@@ -836,9 +856,18 @@ ada<-function(dataset1){
  		
  		ferror1[i,1]<-ferror1[i,1]/n
  		
- 		bound1[i,1]<-bound1[i,1]*z1[i,1]
-
+ 		if(i==1){
+ 			
+ 			bound1[i,1]<-1*z1[i,1]
+ 			
+ 		}
+ 		
+ 		else{
+ 			
+ 			bound1[i,1]<-bound1[i-1,1]*z1[i,1]
+ 			
 		
+		}
 				
 	}
 	
