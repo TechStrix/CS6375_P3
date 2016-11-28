@@ -2,6 +2,7 @@
 
 	dataset1<-"/Users/Dungeoun/Documents/Amit UTD Course Material/Machine Learning CS 6375 /AdaBoost Project/test0-1.txt"	
 
+dataset1<-"/Users/Dungeoun/Documents/Amit UTD Course Material/Machine Learning CS 6375 /AdaBoost Project/test0-2.txt"	
 	
 
 	
@@ -205,9 +206,9 @@ ada<-function(dataset1){
  					
  					else if((x[k] >= x[j]) && (y[k] == 1)){
  						
- 						error2[i,j]<-error2[i,j] + p[i,k]
+ 						error1[i,j]<-error1[i,j] + p[i,k]
  						
- 						indexerr2<-c(indexerr2,k)	
+ 						indexerr1<-c(indexerr1,k)	
  						
  						
  						
@@ -217,7 +218,7 @@ ada<-function(dataset1){
  					
  					if((x[k] < x[j] ) && (y[k] == 1 )){
  						
- 						error1[i,j]<-error1[i,j] + p[i,k]
+ 						error2[i,j]<-error2[i,j] + p[i,k]
  						
  						indexerr1<-c(indexerr1,k)
  						
@@ -300,14 +301,14 @@ ada<-function(dataset1){
  				
  				if( ((x[l] < h[i,1]) && (y[l] == 1)) || ( (x[l] >= h[i,1]) && (y[l] != 1)) ){
  				
- 					q[i,l]<-2.718^(-1*errorfinal[i,1])
+ 					q[i,l]<-2.718^(-1*alpha[i,1])
  					
  				
  				
  				}
  				else{
  				
- 					q[i,l]<-2.718^(errorfinal[i,1])
+ 					q[i,l]<-2.718^(alpha[i,1])
  				
  				}
  				
@@ -322,12 +323,12 @@ ada<-function(dataset1){
  				
  				if( ((x[l] < h[i,1]) && (y[l] != 1)) || ( (x[l] >= h[i,1]) && (y[l] == 1)) ){
  				
- 					q[i,l]<-2.718^(-1*errorfinal[i,1])
+ 					q[i,l]<-2.718^(-1*alpha[i,1])
  				
  				}
  				else {
  				
- 					q[i,l]<-2.718^(errorfinal[i,1])
+ 					q[i,l]<-2.718^(alpha[i,1])
  				
  				}
  				
@@ -450,6 +451,8 @@ ada<-function(dataset1){
  	#p1: probabilities after each iteration
  	
  	p1<-matrix(0,t+1,n)
+ 	
+ 	p2<-matrix(0,t+1,n)
  	
  	for(i in 1:n){
  		
@@ -726,15 +729,19 @@ ada<-function(dataset1){
 		
 		if(symbol1[i,1]==1){
 			
+			k = which.min(G1[i,])
+			
 			cp[i,1]<- 0.5*log((ppr1[i,k] + eps)/(pmw1[i,k] + eps), base = exp(1))
 			cm[i,1]<- 0.5*log((ppw1[i,k] + eps)/(pmr1[i,k] + eps),base = exp(1))
 
 		}
 		
 		else if	(symbol1[i,1]==2){
+					
+			k = which.min(G2[i,])
 			
-			cp[i,1]<- 0.5*log((ppr2[i,k] + eps)/(pmw2[i,k] + eps),base=exp(1))
-			cm[i,1]<- 0.5*log((ppw2[i,k] + eps)/(pmr2[i,k] + eps),base=exp(1))
+			cp[i,1]<-0.5*log((ppr2[i,k] + eps)/(pmw2[i,k] + eps),base=exp(1))
+			cm[i,1]<-0.5*log((ppw2[i,k] + eps)/(pmr2[i,k] + eps),base=exp(1))
 			
 			
 		}
@@ -745,7 +752,7 @@ ada<-function(dataset1){
 			
 			for(k in 1:n ){
 				
-				if(x[k] < h[i,1]){
+				if(x[k] < h1[i,1]){
 					
 					g[i,k]<-cp[i,1]
 					
@@ -763,7 +770,7 @@ ada<-function(dataset1){
 			
 			for(k in 1:n ){
 				
-				if(x[k] >= h[i,1]){
+				if(x[k] >= h1[i,1]){
 				
 					g[i,k]<-cp[i,1]
 					
@@ -778,26 +785,34 @@ ada<-function(dataset1){
 
 		}
 		
+		#pre-normalized p
+		
+		for(j in 1:n){
+		
+			p1[i+1,j]<-p1[i,j]*(exp((-1)*y[1,j]*g[i,j]))			
+			p2[i,j]<-p1[i+1,j]
+
+		}
 		#calculate z1
 		
 		#calculating normalization factor
  		
- 		for(j in 1:n){
+ 		t100<-p1[i+1,]
  			
- 			z1[i,1]<-z1[i,1] + p1[i,j]*(exp((-1)*y[1,j]*g[i,j]))
+ 		z1[i,1]<-sum(t100)
  			
- 			print(z1)
+ 		print(z1)
  			
- 		}
+ 			
+ 			
+ 		print(i)
  		
  		#calculating new p
  		
- 		for(j in 1:n){
- 			
- 			p1[i+1,j]<-(p1[i,j]*(2.718^((-1)*y[1,j]*g[i,j])))/z1[i,1]
- 			
- 		}
+ 		p1[i+1,]<-t100/z1[i,]			
+ 		
 
+		
 		
 		#calculating f1
  		
@@ -811,7 +826,7 @@ ada<-function(dataset1){
  						
  					
  				}
- 				else if(x[k] >= h[i,1]){
+ 				else if(x[k] >= h1[i,1]){
  						
  					f1[i,k]<-f1[i,k] + cm[i,1]
  						
@@ -821,13 +836,13 @@ ada<-function(dataset1){
  				
  			else if(symbol1[i,1] == 2){
  					
- 				if(x[i] < h[i,1]){
+ 				if(x[i] < h1[i,1]){
  					
  					f1[i,k]<-f1[i,k] + cm[i,1]
  						
  					
  				}
- 				else if(x[k] >= h[i,1]){
+ 				else if(x[k] >= h1[i,1]){
  						
  					f1[i,k]<-f1[i,k] + cp[i,1]
  						
@@ -842,7 +857,7 @@ ada<-function(dataset1){
  		
  		#error calculation of f1 starts here
  		
- 		#ferror1: error by wrong classification by f	1
+ 		#ferror1: error by wrong classification by f1
  		
  		for(k in 1:n){
  			
